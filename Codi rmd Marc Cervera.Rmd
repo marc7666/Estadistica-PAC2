@@ -8,7 +8,7 @@ output:
     df_print: paged
 ---
 ```{r}
-setRepositories(ind=2)
+setRepositories(ind=2) # Per descarregar paquets de CRAN
 ```
 
 
@@ -41,7 +41,8 @@ cat("Hi ha un total de",gender["0"], "dones i un total de",gender["1"], "homes")
 Com es pot observar, hi ha un nombre superior d'homes. Per tant, en el diagrama que mostrarà la distribució del gènere hi haurà una mica més de predominança de la part masculina.
 
 ```{r}
-pie(gender, main = "Distribució de gènere", col = c("yellow", "skyblue"), labels = c("Dona", "Home"))
+pie(gender, main = "Distribució de gènere", col = c("yellow", "skyblue"),
+    labels = c("Dona", "Home"))
 ```
 
 Per mostrar visualment la proporció d'alumnes que parlen anglès a casa i els que no, s'escull el mateix tipus de diagrama. Per mostrar aquesta proporció, es repeteix el procés anterior.
@@ -87,7 +88,13 @@ Si s'observa amb atenció la gràfica de distribució, es pot observar una tend�
 install.packages("ggplot2")
 ```
 ```{r}
-library(ggplot2)
+tryCatch({
+  library(ggplot2)
+  print("Paquet importat correctament")
+}, error = function(e){
+  cat("ERROR en el moment d'imoprtar el paquet:",conditionMessage(e), "\n")
+}
+)
 ```
 
 
@@ -95,13 +102,15 @@ library(ggplot2)
 ggplot(data, aes(x = readingScore, fill = factor(male))) + 
   geom_density(alpha = 0.5) +
   facet_wrap(~ data$male, nrow = 1) + 
-  scale_fill_manual(values = c("lightgreen", "skyblue"), name = "Gènere", labels = c("Dona", "Home")) +
+  scale_fill_manual(values = c("lightgreen", "skyblue"), name = "Gènere",
+                    labels = c("Dona", "Home")) +
   scale_x_continuous(labels = scales::number_format(accuracy = 1),
                      expand = c(0, 0)) + 
   # Augment de la precisió de l'escala de l'eix x
   labs(title = "Distribució de readingScore en funció del gènere",
        x = "Puntuació de lectura", y = "Densitat")
-# facet_wrap(~ data$male, nrow = 1) -> Comanda per dividir la gràfica en dues pantalles (una per gènere)
+# facet_wrap(~ data$male, nrow = 1) -> Comanda per dividir la gràfica en dues pantalles
+#(una per gènere)
 ```
 
 En analitzar i comparar ambdues gràfiques, es pot observar que les puntuacions de lectura de les noies (gràfica esquerra) tendeixen a concentrar-se en valors d'entre 500 i 550. En el cas dels nois (gràfica dreta), la màxima densitat es concentra en valors entre 450 i 500. Per consegüent, es pot concloure que donades les gràfiques de distribució anteriors, les noies tenen una major puntuació de lectura que els nois atès que el punt més àlgid de la gràfica femenina és més elevat que el punt més àlgid de la gràfica masculina.
@@ -111,11 +120,13 @@ data$englishAtHome[is.na(data$englishAtHome)] <- "Unknown" # Convertim els valor
 ggplot(data, aes(x = readingScore, fill = englishAtHome)) +
   geom_density(alpha = 0.5) +
   facet_wrap(~ data$englishAtHome, nrow = 1) +
-  scale_fill_manual(values = c("red", "green", "skyblue"), name = "Parla anglès a casa", labels = c("No", "Sí", "Desconegut")) +
+  scale_fill_manual(values = c("red", "green", "skyblue"), name = "Parla anglès a casa",
+                    labels = c("No", "Sí", "Desconegut")) +
   scale_x_continuous(labels = scales::number_format(accuracy = 1),
                      expand = c(0, 0)) +
-  labs(title = "Distribució de readingScore en funció de si els alumnes parlen anglès a casa",
-       x = "Puntuació de lectura", y = "Densitat")
+  labs(title = "Distribució de readingScore en funció de si es parla anglès a casa",
+       x = "Puntuació de lectura", y = "Densitat") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 Observant les gràfiques, s'observa que aquelles persones que no parlen anglès a casa, tendeixen a treure puntuacions de lectura entre 450 i 500.
@@ -127,11 +138,15 @@ data$read30MinsADay[is.na(data$read30MinsADay)] <- "Unknown" # Convertim els val
 ggplot(data, aes(x = readingScore, fill = read30MinsADay)) +
   geom_density(alpha = 0.5) +
   facet_wrap(~ data$read30MinsADay, nrow = 1) +
-  scale_fill_manual(values = c("red", "green", "skyblue"), name = "Llegeix 30 minuts al dia", labels = c("No", "Sí", "Desconegut")) +
+  scale_fill_manual(values = c("red", "green", "skyblue"),
+                    name = "Llegeix 30 minuts al dia",
+                    labels = c("No", "Sí", "Desconegut")) +
   scale_x_continuous(labels = scales::number_format(accuracy = 1),
                      expand = c(0, 0)) +
-  labs(title = "Distribució de readingScore en funció de si els alumnes llegeixen 30 minuts al dia",
-       x = "Puntuació de lectura", y = "Densitat")
+  labs(title = 
+         "Distribució de readingScore en funció de si es llegeix 30 minuts al dia",
+       x = "Puntuació de lectura", y = "Densitat") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 En fer l'anàlisi de les gràfiques d'aquest cas d'estudi, es pot observar que els alumnes que no llegeixen 30 minuts al dia tendeixen a treure unes puntuacions de lectura d'entre 450 i 500 essent el valor més elevat un nombre intermedi entre 450 i 500, mentre que en els alumnes que sí que llegeixen 30 minuts al dia, es pot observar una clara tendència a l'alça de les seves notes de lectura. Els alumnes lectors concentren la seva densitat de notes de lectura en valors d'entre 500 i 550 essent el valor més alt un nombre molt proper a 550. El tercer cas és el d'aquells alumnes dels quals no se sap si llegeixen o no. En el cas d'aquests alumnes, la densitat de notes es concentra en valors d'entre 350 i 400 essent el valor més àlgid un valor proper a 400.
@@ -140,11 +155,12 @@ En fer l'anàlisi de les gràfiques d'aquest cas d'estudi, es pot observar que e
 ggplot(data, aes(x = readingScore, fill = factor(urban))) + 
   geom_density(alpha = 0.5) +
   facet_wrap(~ data$urban, nrow = 1) + 
-  scale_fill_manual(values = c("red", "green"), name = "Centre educatiu en àrea urbana", labels = c("No", "Sí")) +
+  scale_fill_manual(values = c("red", "green"), name = "Centre educatiu en àrea urbana",
+                    labels = c("No", "Sí")) +
   scale_x_continuous(labels = scales::number_format(accuracy = 1),
                      expand = c(0, 0)) + 
   # Augment de la precisió de l'escala de l'eix x
-  labs(title = "Distribució de readingScore en funció del gènere",
+  labs(title = "Distribució de readingScore en funció de l'àrea de l'escola",
        x = "Puntuació de lectura", y = "Densitat")
 ```
 
@@ -155,43 +171,59 @@ data$selfBornUS[is.na(data$selfBornUS)] <- "Unknown" # Convertim els valors NA
 ggplot(data, aes(x = readingScore, fill = selfBornUS)) +
   geom_density(alpha = 0.5) +
   facet_wrap(~ data$selfBornUS, nrow = 1) +
-  scale_fill_manual(values = c("red", "green", "skyblue"), name = "Llegeix 30 minuts al dia", labels = c("No", "Sí", "Desconegut")) +
+  scale_fill_manual(values = c("red", "green", "skyblue"), name = "Nascut a USA",
+                    labels = c("No", "Sí", "Desconegut")) +
   scale_x_continuous(labels = scales::number_format(accuracy = 1),
                      expand = c(0, 0)) +
-  labs(title = "Distribució de readingScore en funció de si els alumnes llegeixen 30 minuts al dia",
-       x = "Puntuació de lectura", y = "Densitat")
-```
-
-d
-
-```{r}
-minutesPerWeekWithNoNA <- data[!is.na(data$minutesPerWeekEnglish), ]
-minutesPerWeekWithNoNA$minutesPerWeekEnglish <- as.numeric(as.character(minutesPerWeekWithNoNA$minutesPerWeekEnglish))
-minutesPerWeekWithNoNA$interval <- cut(minutesPerWeekWithNoNA$minutesPerWeekEnglish, breaks = 50)
-ggplot(minutesPerWeekWithNoNA, aes(x = interval, y = readingScore)) +
-  geom_point(alpha = 0.5) +
-  labs(title = "Distribució de readingScore en funció dels minuts setmanals d'anglès",
-       x = "Minuts d'anglès a la setmana",
-       y = "Puntuació de lectura") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-```
-
-d
-
-```{r}
-schoolSizeWithNoNA <- data[!is.na(data$schoolSize), ]
-schoolSizeWithNoNA$schoolSize <- as.numeric(as.character(schoolSizeWithNoNA$schoolSize))
-schoolSizeWithNoNA$interval <- cut(schoolSizeWithNoNA$schoolSize, breaks = 50)
-ggplot(schoolSizeWithNoNA, aes(x = interval, y = readingScore)) +
-  geom_point(alpha = 0.5) +
-  labs(title = "Distribució de readingScore en funció dels minuts setmanals d'anglès",
-       x = "Minuts d'anglès a la setmana",
-       y = "Puntuació de lectura") +
+  labs(title = "Distribució de readingScore en funció de si s'ha nascut a USA",
+       x = "Puntuació de lectura", y = "Densitat") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
+Després d'observar les tres gràfiques, es pot concloure que aquells alumnes que no llegeixen 30 minuts al dia tendeixen a obtenir unes notes de lectura al voltant dels 500 punts, sent el punt amb més densitat el mateix valor 500.
+Els alumnes que sí que llegeixen 30 minuts al dia, tendeixen a treure unes notes entre 450 i 500, però a diferència d'aquells alumnes no lectors, es pot veure com la corba en el seu punt més àlgid no té un màxim tan agut, és a dir en la part més alta de la corba es reparteixen una mica més les notes.
+Aquells alumnes que no se sap si llegeixen o no tendeixen a treure unes notes entre 400 i 450 i, un altre cop, es percep un màxim bastant agut, cosa que indica que les notes no estan tan repartides (en la part alta de la corba de densitat) com en la corba dels alumnes lectors.
 
+```{r}
+any(is.na(data$minutesPerWeekEnglish))
+```
+
+```{r}
+dataClean <- data[complete.cases(data$readingScore, data$minutesPerWeekEnglish), ]
+any(is.na(dataClean$readingScore))
+any(is.na(dataClean$minutesPerWeekEnglish))
+```
+
+
+```{r}
+ggplot(dataClean, aes(x = minutesPerWeekEnglish, y = readingScore)) +
+  geom_bin2d() +
+  scale_fill_gradient2(low = "grey", mid = "skyblue", high = "blue", name = "Densitat") +
+  labs(x = "Minuts d'anglès", y = "Puntuació de lectura") +
+  scale_y_continuous(breaks = seq(0, 1000, by = 50)) +
+  scale_x_continuous(breaks = seq(0, 2500, by = 200)) +
+  ggtitle("Distribució de la puntuació de lectura en funció dels minuts d'anglès")
+```
+Com s'observa a la gràfica, la densitat més gran es concentra al voltant dels 300 minuts d'anglès a la setmana amb unes notes al voltant de 525.
+
+```{r}
+any(is.na(data$schoolSize))
+```
+
+
+```{r}
+ggplot(data, aes(x = schoolSize, y = readingScore)) +
+  geom_bin2d() +
+  scale_fill_gradient2(low = "grey", mid = "skyblue", high = "blue", name = "Densitat") +
+  labs(x = "Mida de l'escola", y = "Puntuació de lectura") +
+  scale_y_continuous(breaks = seq(0, 1000, by = 100)) +
+  scale_x_continuous(breaks = seq(0, 8000, by = 500)) +
+  ggtitle("Distribució de la puntuació de lectura en funció de la mida de l'escola")
+```
+
+Atès que ambdues variables tenen un gran nombre de valors diferents, en aquesta ocasió s'opta per representar la distribució mitjançant un mapa de calor, on la coloració més fosca implica una major densitat.
+S'observa que la llegenda del mapa de calor està numerada de 0 a 50. La determinació d'aquesta escala es fa de manera automàtica segons els valors de les dades, és a dir, _ggplot_ busca el valor màxim i el mínim i a partir d'ells crea una gradació de color.
+En aquest cas, i segons el codi de coloració, es pot constatar que la densitat més gran es troba en les escoles que tenen al voltant de 1000 alumnes i unes puntuacions de lectura al voltant dels 500 punts.
 
 
 
