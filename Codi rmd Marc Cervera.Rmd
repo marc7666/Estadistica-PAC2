@@ -225,13 +225,41 @@ Atès que ambdues variables tenen un gran nombre de valors diferents, en aquesta
 S'observa que la llegenda del mapa de calor està numerada de 0 a 50. La determinació d'aquesta escala es fa de manera automàtica segons els valors de les dades, és a dir, _ggplot_ busca el valor màxim i el mínim i a partir d'ells crea una gradació de color.
 En aquest cas, i segons el codi de coloració, es pot constatar que la densitat més gran es troba en les escoles que tenen al voltant de 1000 alumnes i unes puntuacions de lectura al voltant dels 500 punts.
 
+# 2 Interval de confiança de reading score
 
+Calculeu l’interval de confiança del valor mitjà de readingScore al 95% i al 97%. Interpreteu el resultat.
 
+**Requisits:**
 
+• Implementeu una funció que calculi l’interval de confiança i que pugueu utilitzar per obtenir l’IC per al nivell de confiança de 95% i 97% respectivament.
 
+• No podeu fer servir funcions d’R que calculin l’interval de confiança. Sí podeu utilitzar funcions per calcular els valors de la distribució corresponent, com *qt*, *qnorm*, *pt*, *pnorm*.
 
+```{r}
+calcul_interval <- function(nc){
+  alpha <- 1-nc
+  scorings <- as.numeric(data$readingScore)
+  n <- length(scorings) # Nombre de dades
+  desviation <- sd(scorings) # sd = Standard desviation
+  error <- desviation / sqrt(as.numeric(n))
+  t <- qt(alpha/2, df=n-1, lower.tail = FALSE)
+  L <- mean(scorings) - t * error
+  U <- mean(scorings) + t * error
+  c((round(L, 2)), round(U, 2))
+}
+```
 
+```{r}
+nc95 <- calcul_interval(0.95)
+cat("L'interval de confiança per a un nivell de cinfiança del 95% és:", nc95)
+```
 
+```{r}
+nc97 <- calcul_interval(0.97)
+cat("L'interval de confiança per a un nivell de cinfiança del 97% és:", nc97)
+```
+
+Els intervals de confiança donen un rang de valors en el qual pot estar la mitjana poblacional de la variable d'estudi. En aquest cas, amb un 95%/97% de confiança, la mitjana real de la varibale _readingScore_ es trobarà dins d'aquest rang de valors. És a dir, s'està afirmant que hi ha una probabilitat del 95%/97% que la puntuació mitjana de lectura de tots els alumnes que han participat a la prova pisa estigui dins del rang de valors. En el cas del 95% de nivell de confiança, s'està afirmant que amb un 95% de probabilitat la puntuació mitjana de lectura es troba entre els 494.82 punts i els 501.34 punts. En el cas del 97% de nivell de confiança el rang s'estableix en 494.49 i 501.34.
 
 
 
