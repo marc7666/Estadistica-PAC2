@@ -14,11 +14,7 @@ setRepositories(ind=2) # Per descarregar paquets de CRAN
 
 # 1 Estadística descriptiva
 
-En primer lloc, fem una anàlisi descriptiva d'algunes variables d'interès i la relació amb readingScore. Seguiu els passos que s'indiquen a continuació.
-
 ## 1.1 Distribució de variables
-
-En primer lloc, mostreu visualment la distribució de gènere a la població, així com la proporció dels estudiants que parlen anglès a casa en relació als que no parlen anglès. Mostreu un gràfic per cada cas.
 
 Abans de realitzar cap anàlisi cal llegir el fitxer. L'operació de lectura es realitzarà dins d'un bloc _tryCatch()_, així si no és possible realitzar la lectura es llançarà un error.
 ```{r}
@@ -41,7 +37,7 @@ cat("Hi ha un total de",gender["0"], "dones i un total de",gender["1"], "homes")
 Com es pot observar, hi ha un nombre superior d'homes. Per tant, en el diagrama que mostrarà la distribució del gènere hi haurà una mica més de predominança de la part masculina.
 
 ```{r}
-pie(gender, main = "Distribució de gènere", col = c("yellow", "skyblue"),
+pie(gender, main = "Distribucio de genere", col = c("yellow", "skyblue"),
     labels = c("Dona", "Home"))
 ```
 
@@ -50,21 +46,19 @@ En aquest cas, s'ha descartat l'ús d'un diagrama de densitat perquè en haver t
 
 ```{r}
 englishHome <- table(data$englishAtHome)
-cat("Un total de",englishHome["0"], "no parlen anglès a casa i un total de"
-    ,englishHome["1"], "alumnes parlen anglès a casa")
+cat("Un total de",englishHome["0"], "no parlen angles a casa i un total de"
+    ,englishHome["1"], "alumnes parlen angles a casa")
 ```
 
 ```{r}
-pie(englishHome, main = "Distribució d'alumnes que parlen anglès a casa i 
-    alumnes que no parlen anglès a casa", col = c("red", "green"), labels = c("No", "Sí"))
+pie(englishHome, main = "Distribucio d'alumnes que parlen angles a casa i 
+    alumnes que no parlen angles a casa", col = c("red", "green"), labels = c("No", "Sí"))
 ```
 
 Com s'observa, hi ha una gran majoria d'alumnes que sí que parlen anglès a casa.
 En aquest segon cas es descarta un diagrama de distribució atès que es considera més senzill d'interpretar un "Sí" o un "No" que un 1 o un 0.
 
 ## 1.2 Anàlisi descriptiva de readingScore
-
-Mostreu visualment la distribució de la variable readingScore. Interpreteu el gràfic.
 
 ```{r}
 scoring <- data$readingScore
@@ -74,11 +68,11 @@ Com en aquest cas hi ha molts valors diferents, per mostrar la distribució de l
 
 ```{r}
 plot(density(scoring),
-     main = "Distribució de la variable readingScore",
+     main = "Distribucio de la variable readingScore",
      xlab = "Valors",
      ylab = "Densitat",
      col = "blue",
-     lwd = 2 # Gruix de la línia
+     lwd = 2 # Gruix de la linia
      )
 ```
 
@@ -227,14 +221,6 @@ En aquest cas, i segons el codi de coloració, es pot constatar que la densitat 
 
 # 2 Interval de confiança de reading score
 
-Calculeu l’interval de confiança del valor mitjà de readingScore al 95% i al 97%. Interpreteu el resultat.
-
-**Requisits:**
-
-• Implementeu una funció que calculi l’interval de confiança i que pugueu utilitzar per obtenir l’IC per al nivell de confiança de 95% i 97% respectivament.
-
-• No podeu fer servir funcions d’R que calculin l’interval de confiança. Sí podeu utilitzar funcions per calcular els valors de la distribució corresponent, com *qt*, *qnorm*, *pt*, *pnorm*.
-
 ```{r}
 calcul_interval <- function(nc){
   alpha <- 1-nc
@@ -260,6 +246,177 @@ cat("L'interval de confiança per a un nivell de cinfiança del 97% és:", nc97)
 ```
 
 Els intervals de confiança donen un rang de valors en el qual pot estar la mitjana poblacional de la variable d'estudi. En aquest cas, amb un 95%/97% de confiança, la mitjana real de la varibale _readingScore_ es trobarà dins d'aquest rang de valors. És a dir, s'està afirmant que hi ha una probabilitat del 95%/97% que la puntuació mitjana de lectura de tots els alumnes que han participat a la prova pisa estigui dins del rang de valors. En el cas del 95% de nivell de confiança, s'està afirmant que amb un 95% de probabilitat la puntuació mitjana de lectura es troba entre els 494.82 punts i els 501.34 punts. En el cas del 97% de nivell de confiança el rang s'estableix en 494.49 i 501.34.
+
+# 3 Anàlisi de factors que influeixen en _readingScore_
+
+Les hipòtesis que s'utilitzen per a la resolució d'aquesta activitat són:
+
+- H0: La variable X no afecta la mitjana de _readingScore_ (Hipòtesi nul·la)
+- H1: La variable X afecta a la mitjana de _readingScore_ (Hipòtesi alternativa)
+
+En aquest cas, s'utilitzarà un test d'hipòtesis (o contrast) de dues mostres independents sobre la mitjana de _readingScore_ amb variància desconeguda. Les variables que s'estan considerant per comparar les puntuacions de lectura (gènere, si es parla anglès a casa, lectura de 30 minuts, etc.) són característiques individuals de cada alumne, cosa que justifica el tractament de les mostres com a independents.
+
+S'usarà un test bilateral, per observar diferències tant per sota com per sobre del valor de referència (la mitjana).
+
+En primer lloc, atès que no coneixem la variància de les mostres, hem de calcular si aquests són iguals, o no, mitjançant un test d'igualtat de variàncies.
+
+```{r}
+# Test d'igualtat de vairancides per a columnes amb valors binaris
+test_homoscedasticitat_binari <- function(ds, dada){
+  alfa <- 0.05
+  noNA <- ds[complete.cases(ds$readingScore, ds[[dada]]), ]
+  var1 <- noNA$readingScore[ noNA[[dada]]==1 ]
+  var2 <- noNA$readingScore[ noNA[[dada]]==0 ]
+  mean1 <- mean(var1) ; n1 <- length(var1) ; s1 <- sd( var1 )
+  mean2 <- mean(var2) ; n2 <- length(var2) ; s2 <- sd( var2 )
+  fobs<- s1^2 / s2^2
+  fcritL <- qf( alfa/2, df1=n1-1, df2=n2-2 )
+  fcritU <- qf( 1- alfa/2, df1=n1-1, df2=n2-2)
+  pvalue <- min(pf( fobs, df1=n1-1, df2=n2-2, lower.tail=FALSE ), pf( fobs, df1=n1-1,
+                                                                      df2=n2-2))*2
+  return (c( fobs, fcritL, fcritU, pvalue))
+}
+
+```
+
+
+```{r}
+calculations <- list(
+  test_homoscedasticitat_binari(data, "read30MinsADay"),
+  test_homoscedasticitat_binari(data, "urban"),
+  test_homoscedasticitat_binari(data, "selfBornUS")
+)
+results <- as.data.frame(do.call(rbind, calculations))
+rownames(results) <- c("read30MinsADay", "urban", "selfBornUS")
+colnames(results) <- c("F_obs", "F_crit_L", "F_crit_U", "p_value")
+print(results)
+```
+
+```{r}
+# Test d'igualtat de vairancides per a columnes amb valors no binaris
+test_homoscedasticitat_no_binari <- function(ds, dada, superior_a){
+  alfa <- 0.05
+  noNA <- ds[complete.cases(ds$readingScore, ds[[dada]]), ]
+  var1 <- noNA$readingScore[ noNA[[dada]]> superior_a ]
+  var2 <- noNA$readingScore[ noNA[[dada]]<= superior_a ]
+  mean1 <- mean(var1) ; n1 <- length(var1) ; s1 <- sd( var1 )
+  mean2 <- mean(var2) ; n2 <- length(var2) ; s2 <- sd( var2 )
+  fobs<- s1^2 / s2^2
+  fcritL <- qf( alfa/2, df1=n1-1, df2=n2-2 )
+  fcritU <- qf( 1- alfa/2, df1=n1-1, df2=n2-2)
+  pvalue <- min(pf( fobs, df1=n1-1, df2=n2-2, lower.tail=FALSE ), pf( fobs, df1=n1-1,
+                                                                      df2=n2-2))*2
+  return (c( fobs, fcritL, fcritU, pvalue))
+}
+
+```
+
+```{r}
+calls <- list(
+  test_homoscedasticitat_no_binari(data, "minutesPerWeekEnglish", 250), 
+  test_homoscedasticitat_no_binari(data, "schoolSize", 1000) )
+results2 <- as.data.frame(do.call(rbind, calls))
+rownames(results2) <- c("minutesPerWeekEnglish", "schoolSize")
+colnames(results2) <- c("F_obs", "F_crit_L", "F_crit_U", "p_value")
+print(results2)
+```
+
+Com es pot observar, en tots els casos proposats els valors observats en el test d'homoscedasticitat es troben dins del rang de valors crítics, per tant, es conclou que les variàncies són iguals amb un nivell de confiança del 95%.
+Un cop comprovat que les variàncies són iguals, cal procedir amb el test, en aquest cas bilateral.
+
+```{r}
+aplicacio_test <- function(mostra1, mostra2) {
+  alpha <- 0.05
+  var1 <- as.numeric(as.character(mostra1))
+  var2 <- as.numeric(as.character(mostra2))
+  noNA <- data.frame(var1, var2)
+  noNA <- noNA[complete.cases(noNA), ]
+  mean1 <- mean(noNA$var1); n1 <- length(noNA$var1); s1 <- sd(noNA$var1)
+  mean2 <- mean(noNA$var2); n2 <- length(noNA$var2); s2 <- sd(noNA$var2)
+  S <- sqrt(((n1 - 1) * s1^2 + (n2 - 1) * s2^2) / (n1 + n2 - 2))
+  tobs <- (mean1 - mean2) / (S * sqrt(1 / n1 + 1 / n2))
+  tcritL <- qt(alpha / 2, n1 + n2 - 2)
+  tcritU <- qt(1 - alpha / 2, n1 + n2 - 2)
+  pvalue <- pt(abs(tobs), df = n1 + n2 - 2, lower.tail = FALSE) * 2
+  c(tobs, tcritL, tcritU, pvalue)
+}
+```
+
+```{r}
+more_than_250_minutes_english_per_week <- data[data$minutesPerWeekEnglish > 250, ]
+less_than_250_minutes_english_per_week <- data[data$minutesPerWeekEnglish <= 250, ]
+more_than_1000_students <- data[data$schoolSize > 1000, ]
+less_than_1000_students <- data[data$schoolSize <= 1000, ]
+suppressWarnings({
+  calls_list <- list(
+  aplicacio_test(data$readingScore, data$englishAtHome),
+  aplicacio_test(data$readingScore, data$read30MinsADay),
+  aplicacio_test(data$readingScore, data$urban),
+  aplicacio_test(data$readingScore, data$selfBornUS),
+  aplicacio_test(more_than_250_minutes_english_per_week$readingScore,
+                 more_than_250_minutes_english_per_week$minutesPerWeekEnglish),
+  aplicacio_test(less_than_250_minutes_english_per_week$readingScore,
+                 less_than_250_minutes_english_per_week$minutesPerWeekEnglish),
+  aplicacio_test(more_than_1000_students$readingScore, more_than_1000_students$schoolSize),
+  aplicacio_test(less_than_1000_students$readingScore, less_than_1000_students$schoolSize)
+)
+results3 <- as.data.frame(do.call(rbind, calls_list))
+rownames(results3) <- c("English home", "Read 30 mins", "Urban", "Born US", ">250 mins per week", "<=250 mins per week", ">1000 students", "<=1000 students")
+colnames(results3) <- c("tobs", "tcritL", "tcritU", "pvalue")
+print(results3)
+})
+```
+
+En primer lloc, cal justificar l'ús de la funció _suppresswarnings()_. El fet de convertir variables de tipus _character_ a variables numèriques aptes per operar, fa que els "NA" (string) es converteixin a NA (numèric). Si es treu la funció _suppresswarnings()_, es podrà observar com es produeixen _warnings_ d'avís d'introducció de NAs, però no hi ha cap perill atès que posteriorment s'eliminen aquests valors no presents (NA) gràcies a _complete.cases()_.
+
+Com s'observa els valors observats es troben fora del rang dels valors crítics, per tant, es rebutja la hipòteis nul·la dels casos. Per tant, es conclou que les variables d'estudi si que afecten a les puntuacions de lectura.
+
+En el cas del nombre de minuts dedicats, setmanalment, a l'anglès, és pot observar com aquells alumnes que dediquen fins a 250 minuts setmanals a estudiar anglès, tenen un valor observat més allunyat dels valors crítics, el que implica que la hipòtesis alternativa (la variable _minutesPerWeekEnglish_ afecta a les puntuacions de lectura) guanya més força que en el cas dels alumnes que dediquen més de 250 minuts setmanals a l'estudi de l'anglès.
+
+En el cas de la mida de l'escola, s'observa que en aquelles escoles amb més de 1000 alumnes el valor observat s'allunya més dels valors crítics, per tant, la hipòtesis alternativa guanya més pes que en aquelles escoles amb un total de fins a 1000 alumnes.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
