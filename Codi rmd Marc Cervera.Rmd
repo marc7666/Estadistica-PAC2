@@ -321,14 +321,16 @@ colnames(results2) <- c("F_obs", "F_crit_L", "F_crit_U", "p_value")
 print(results2)
 ```
 
-Com es pot observar, en tots els casos proposats els valors observats en el test d'homoscedasticitat es troben dins del rang de valors crítics, per tant, es conclou que les variàncies són iguals amb un nivell de confiança del 95%.
+Com es pot observar, en tots els casos proposats els valors observats en el test d'homoscedasticitat es troben dins del rang de valors crítics, excepte un (_read30MinADay_), per tant, es conclou que les variàncies són iguals amb un nivell de confiança del 95% excepte en el cas de _read30MinADay_ que amb un 95% de nivell de confiança es conclou que les variàncies són diferents.
 Un cop comprovat que les variàncies són iguals, cal procedir amb el test, en aquest cas bilateral.
 
 ```{r}
 aplicacio_test <- function(mostra1, mostra2) {
   alpha <- 0.05
-  var1 <- as.numeric(as.character(mostra1))
-  var2 <- as.numeric(as.character(mostra2))
+  suppressWarnings({
+    var1 <- as.numeric(as.character(mostra1))
+    var2 <- as.numeric(as.character(mostra2))
+  })
   noNA <- data.frame(var1, var2)
   noNA <- noNA[complete.cases(noNA), ]
   mean1 <- mean(noNA$var1); n1 <- length(noNA$var1); s1 <- sd(noNA$var1)
@@ -343,28 +345,60 @@ aplicacio_test <- function(mostra1, mostra2) {
 ```
 
 ```{r}
+aplicacio_test_variancies_diferents <- function(){
+  alpha <- 0.05
+  suppressWarnings({
+    var1 <- as.numeric(as.character(data$readingScore))
+    var2 <- as.numeric(as.character(data$read30MinsADay))
+  })
+  noNA <- data.frame(var1, var2)
+  noNA <- noNA[complete.cases(noNA), ]
+  mean1 <- mean(noNA$var1); n1 <- length(noNA$var1); s1 <- sd(noNA$var1)
+  mean2 <- mean(noNA$var2); n2 <- length(noNA$var2); s2 <- sd(noNA$var2)
+  S <- sqrt(((n1 - 1) * s1^2 + (n2 - 1) * s2^2) / (n1 + n2 - 2))
+  tobs <- (mean1 - mean2) / (sqrt(s1^2 / n1 + s2^2 / n2))
+  tcritL <- qt(alpha / 2, n1 + n2 - 2)
+  tcritU <- qt(1 - alpha / 2, n1 + n2 - 2)
+  graus_llibertat_variancies_diferents <- ((s1^2 / n1 + s2^2 / n2)^2) /
+    ((s1^2 / n1)^2 / (n1 - 1) + (s2^2 / n2)^2 / (n2 - 1))
+  pvalue <- pt(abs(tobs), df = graus_llibertat_variancies_diferents,
+               lower.tail = FALSE)* 2
+  c(tobs, tcritL, tcritU, pvalue)
+}
+variancies_diffs <- list(
+  aplicacio_test_variancies_diferents()
+)
+read_30 <- as.data.frame(do.call(rbind, variancies_diffs))
+rownames(read_30) <- c("read 30 minutes a day")
+colnames(read_30) <- c("tobs", "tcritL", "tcritU", "pvalue")
+print(read_30)
+```
+
+Per al cas de la variable _read30MinsADay_, com s'ha observat que les variàncies són diferents, s'ha procedit amb les correccions adequades per a dur a terme el test amb èxit.
+
+```{r}
 more_than_250_minutes_english_per_week <- data[data$minutesPerWeekEnglish > 250, ]
 less_than_250_minutes_english_per_week <- data[data$minutesPerWeekEnglish <= 250, ]
 more_than_1000_students <- data[data$schoolSize > 1000, ]
 less_than_1000_students <- data[data$schoolSize <= 1000, ]
-suppressWarnings({
-  calls_list <- list(
+
+calls_list <- list(
   aplicacio_test(data$readingScore, data$englishAtHome),
-  aplicacio_test(data$readingScore, data$read30MinsADay),
   aplicacio_test(data$readingScore, data$urban),
   aplicacio_test(data$readingScore, data$selfBornUS),
   aplicacio_test(more_than_250_minutes_english_per_week$readingScore,
                  more_than_250_minutes_english_per_week$minutesPerWeekEnglish),
   aplicacio_test(less_than_250_minutes_english_per_week$readingScore,
                  less_than_250_minutes_english_per_week$minutesPerWeekEnglish),
-  aplicacio_test(more_than_1000_students$readingScore, more_than_1000_students$schoolSize),
+  aplicacio_test(more_than_1000_students$readingScore,
+                 more_than_1000_students$schoolSize),
   aplicacio_test(less_than_1000_students$readingScore, less_than_1000_students$schoolSize)
 )
 results3 <- as.data.frame(do.call(rbind, calls_list))
-rownames(results3) <- c("English home", "Read 30 mins", "Urban", "Born US", ">250 mins per week", "<=250 mins per week", ">1000 students", "<=1000 students")
+rownames(results3) <- c("English home", "Urban", "Born US", ">250 mins per week",
+                        "<=250 mins per week", ">1000 students", "<=1000 students")
 colnames(results3) <- c("tobs", "tcritL", "tcritU", "pvalue")
 print(results3)
-})
 ```
 
 En primer lloc, cal justificar l'ús de la funció _suppresswarnings()_. El fet de convertir variables de tipus _character_ a variables numèriques aptes per operar, fa que els "NA" (string) es converteixin a NA (numèric). Si es treu la funció _suppresswarnings()_, es podrà observar com es produeixen _warnings_ d'avís d'introducció de NAs, però no hi ha cap perill atès que posteriorment s'eliminen aquests valors no presents (NA) gràcies a _complete.cases()_.
@@ -375,17 +409,72 @@ En el cas del nombre de minuts dedicats, setmanalment, a l'anglès, és pot obse
 
 En el cas de la mida de l'escola, s'observa que en aquelles escoles amb més de 1000 alumnes el valor observat s'allunya més dels valors crítics, per tant, la hipòtesis alternativa guanya més pes que en aquelles escoles amb un total de fins a 1000 alumnes.
 
+# 4 Relació entre parlas anglès a casa i lectura a casa
 
+Per saber si les dues variables proposades estan, o no, relacionades s'opta per utilitzar el test de khi quadrat. Aquest test és una bona opció quan es vol saber si dues coses diferents tenen relació entre elles i ambdues només poden adoptar dues opcions com; "sí" o "no", "True" o "False" o en aquest cas concret "1" o "0". En el cas que ocupa aquest exercici es vol saber si parlar anglès a casa està relacionat amb llegir a casa. A més el test de khi quadrat és un test senzill d'interpretar.
 
+En aquest cas la hipòtesi nul·la és: "La parla d'anglès a casa i els 30 minuts de lectura són variables independents" i la hipòtesi alternativa és: "La parla d'anglès a casa i els 30 minuts de lectura són variables aparellades".
 
+```{r}
+# Taula de contingencia + sumes dels valors observats
+suppressWarnings({
+  enlgish_home_num <- as.numeric(as.character(data$englishAtHome))
+  read_30_mins_num <- as.numeric(as.character(data$read30MinsADay))
+})
 
+noNA <- data.frame(enlgish_home_num, read_30_mins_num)
+noNA <- noNA[complete.cases(noNA), ]
+# table(files, columnes)
+taula_contingencia <- table(Angles_a_casa = noNA$enlgish_home_num,
+                            Llegeix_30_minuts = noNA$read_30_mins_num)
 
+total_fila_0 <- sum(taula_contingencia[1], taula_contingencia[3])
+total_fila_1 <- sum(taula_contingencia[2], taula_contingencia[4])
+total_col_0 <- sum(taula_contingencia[1], taula_contingencia[2])
+total_col_1 <- sum(taula_contingencia[3], taula_contingencia[4])
+# taula_contingencia[X] = Valor observat
+total_global <- sum(total_col_0, total_col_1)
 
+# Taula de contingencia
+print(taula_contingencia)
+cat("Total de la fila 0: ", total_fila_0, "\n")
+cat("Total de la fila 1: ", total_fila_1, "\n")
+cat("Total de la columna 0: ", total_col_0, "\n")
+cat("Total de la columna 1: ", total_col_1, "\n")
+cat("Total global: ", total_global)
+```
 
+```{r}
+# Calcul dels valors esperats
+E11 <- total_fila_0 * (total_col_0 / total_global) 
+E12 <- total_fila_0 * (total_col_1 / total_global)
+E21 <- total_fila_1 * (total_col_0 / total_global)
+E22 <- total_fila_1 * (total_col_1 / total_global)
+cat("Valor observat E11: ", E11, "\n")
+cat("Valor observat E12: ", E12, "\n")
+cat("Valor observat E21: ", E21, "\n")
+cat("Valor observat E22: ", E22, "\n")
+```
 
+```{r}
+# Calcul del test khi
+khi <- ( (taula_contingencia[1] - E11)^2 / E11) +
+  ( (taula_contingencia[3] - E12)^2 / E12) +
+  ( (taula_contingencia[2] - E21)^2 / E21) +
+  ( (taula_contingencia[4] - E22)^2 / E22)
+cat("Valor del test khi quadrat: ", khi)
+```
+```{r}
+graus_llibertat <- (nrow(taula_contingencia) - 1) * (ncol(taula_contingencia) - 1)
+cat("Graus de llibertat: ", graus_llibertat)
+```
 
+```{r}
+p_value <- 1 - pchisq(khi, graus_llibertat)
+cat("Valor P:", p_value)
+```
 
-
+Un cop aplicat el test de khi quadrat, i observats els valors es pot concloure que no hi ha evidència suficient per a rebutjar la hipòtesi nul·la i que, per tant, la parla d'anglès a casa i els 30 minuts de lectura són variables independents amb un nivell de confiança del 95%. Caldria baixar fins a un nivell de confiança del 21% per tal de poder acceptar la hipòtesi nul·la com a vàlida.
 
 
 
