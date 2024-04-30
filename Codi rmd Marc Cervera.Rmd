@@ -256,7 +256,7 @@ Les hipòtesis que s'utilitzen per a la resolució d'aquesta activitat són:
 
 En aquest cas, s'utilitzarà un test d'hipòtesis (o contrast) de dues mostres independents sobre la mitjana de _readingScore_ amb variància desconeguda. Les variables que s'estan considerant per comparar les puntuacions de lectura (gènere, si es parla anglès a casa, lectura de 30 minuts, etc.) són característiques individuals de cada alumne, cosa que justifica el tractament de les mostres com a independents.
 
-S'usarà un test bilateral, per observar diferències tant per sota com per sobre del valor de referència (la mitjana).
+S'usarà un test bilateral, per observar diferències tant per sota com per sobre del valor de referència (la mitjana). S'usa un test bilateral atès que no s'especifica cap direcció, és a dir, la jipòtesi alternativa no implica quelcom semblant a: "x < y" o "x > y"
 
 En primer lloc, atès que no coneixem la variància de les mostres, hem de calcular si aquests són iguals, o no, mitjançant un test d'igualtat de variàncies.
 
@@ -403,13 +403,13 @@ print(results3)
 
 En primer lloc, cal justificar l'ús de la funció _suppresswarnings()_. El fet de convertir variables de tipus _character_ a variables numèriques aptes per operar, fa que els "NA" (string) es converteixin a NA (numèric). Si es treu la funció _suppresswarnings()_, es podrà observar com es produeixen _warnings_ d'avís d'introducció de NAs, però no hi ha cap perill atès que posteriorment s'eliminen aquests valors no presents (NA) gràcies a _complete.cases()_.
 
-Com s'observa els valors observats es troben fora del rang dels valors crítics, per tant, es rebutja la hipòteis nul·la dels casos. Per tant, es conclou que les variables d'estudi si que afecten a les puntuacions de lectura.
+Com s'observa els valors observats es troben fora del rang dels valors d'acceptació de la hipòtesi nul·la, per tant, es rebutja la hipòteis nul·la dels casos. En conseqüència, es conclou que les variables d'estudi si que afecten a les puntuacions de lectura.
 
 En el cas del nombre de minuts dedicats, setmanalment, a l'anglès, és pot observar com aquells alumnes que dediquen fins a 250 minuts setmanals a estudiar anglès, tenen un valor observat més allunyat dels valors crítics, el que implica que la hipòtesis alternativa (la variable _minutesPerWeekEnglish_ afecta a les puntuacions de lectura) guanya més força que en el cas dels alumnes que dediquen més de 250 minuts setmanals a l'estudi de l'anglès.
 
 En el cas de la mida de l'escola, s'observa que en aquelles escoles amb més de 1000 alumnes el valor observat s'allunya més dels valors crítics, per tant, la hipòtesis alternativa guanya més pes que en aquelles escoles amb un total de fins a 1000 alumnes.
 
-# 4 Relació entre parlas anglès a casa i lectura a casa
+# 4 Relació entre parlar anglès a casa i lectura a casa
 
 Per saber si les dues variables proposades estan, o no, relacionades s'opta per utilitzar el test de khi quadrat. Aquest test és una bona opció quan es vol saber si dues coses diferents tenen relació entre elles i ambdues només poden adoptar dues opcions com; "sí" o "no", "True" o "False" o en aquest cas concret "1" o "0". En el cas que ocupa aquest exercici es vol saber si parlar anglès a casa està relacionat amb llegir a casa. A més el test de khi quadrat és un test senzill d'interpretar.
 
@@ -476,15 +476,102 @@ cat("Valor P:", p_value)
 
 Un cop aplicat el test de khi quadrat, i observats els valors es pot concloure que no hi ha evidència suficient per a rebutjar la hipòtesi nul·la i que, per tant, la parla d'anglès a casa i els 30 minuts de lectura són variables independents amb un nivell de confiança del 95%. Caldria baixar fins a un nivell de confiança del 21% per tal de poder acceptar la hipòtesi nul·la com a vàlida.
 
+# 5 Relació entre parlar anglès a casa i lectura a casa (aproximació 2)
 
+- Hipòtesi nul·la (H0): Parlar, o no, anglès a casa no té cap efecte en la quantitat de lectura que els estudiants realitzen
+- Hipòtesi alternativa (h1): Parlar, o no, anglès a casa sí té algún efecte en la quantitat de lectura que els estudiants realitzen.
 
+Tal com ha succeït anteriorment en aquesta PAC, solament es vol detectar si hi ha alguna diferència, en aquest cas sobre la proporció. Per tant, com no s'especifica cap direcció s'utilitzarà un test bilateral per així considerar totes les possibilitats de diferència.
 
+El primer que caldria fer es calcular la taula de contingència per saber quants alumnes parlen anglès a casa i llegeixen, quants alumnes parlen anglès a casa i no llegeixen, quants alumnes parlen no anglès a casa i llegeixen i quants alumnes no parlen anglès a casa i no llegeixen. Aquesta taula s'ha calculat en l'exercici 4.
 
+```{r}
+print(taula_contingencia)
+no_parla_angles_no_llegeix <- taula_contingencia[1, 1]
+no_parla_angles_llegeix <- taula_contingencia[1, 2]
+parla_angles_no_llegeix <- taula_contingencia[2, 1]
+parla_angles_llegeix <- taula_contingencia[2, 2]
+cat("Alumnes que parlen angles a casa i no llegeixen: ", parla_angles_no_llegeix, "\n")
+cat("Alumnes que parlen angles a casa i llegeixen: ", parla_angles_llegeix, "\n")
+cat("Alumnes que no parlen angles a casa i no llegeixen: ", 
+    no_parla_angles_no_llegeix, "\n")
+cat("Alumnes que no parlen angles a casa i llegeixen: ", no_parla_angles_llegeix, "\n")
 
+```
 
+```{r}
+porporcio_estudiants_angles_lectors <- parla_angles_llegeix /
+  (parla_angles_no_llegeix + parla_angles_llegeix)
+proporcio_estudiants_no_angles_lectors <- no_parla_angles_llegeix /
+  (no_parla_angles_no_llegeix + no_parla_angles_llegeix)
 
+total_estudiants_angles <- parla_angles_no_llegeix + parla_angles_llegeix
+total_estudiants_no_angles <- no_parla_angles_no_llegeix + no_parla_angles_llegeix
 
+cat("Proporcio d'estudiants que parlen angles i llegeixen: ",
+    porporcio_estudiants_angles_lectors, "\n")
+cat("Proporcio d'estudiants que parlen no angles i llegeixen: ",
+    proporcio_estudiants_no_angles_lectors, "\n")
+cat("Total d'alumnes que parlen angles: ", total_estudiants_angles, "\n")
+cat("Total d'alumnes que no parlen angles: ", total_estudiants_no_angles)
+```
 
+```{r}
+# (exits escenari 1 + exits escenari 2) / (total escenari 1 + total escenari 2 )
+prop_obs <- (parla_angles_llegeix + no_parla_angles_llegeix) /
+  (total_estudiants_angles + total_estudiants_no_angles)
+cat("Proporcio observada: ", prop_obs)
+```
+
+```{r}
+error_estandard <- sqrt((prop_obs * (1 - prop_obs)) /
+                          (total_estudiants_angles + total_estudiants_no_angles))
+cat("Error estandard: ", error_estandard)
+```
+
+```{r}
+z <- (porporcio_estudiants_angles_lectors - 
+        proporcio_estudiants_no_angles_lectors) / error_estandard
+cat("Estadístic Z: ", z)
+```
+
+```{r}
+p_value <- 2 * (1 - pnorm(abs(z)))
+cat("Valor p:", p_value)
+```
+
+Treballant, com tota l'estona, amb un nivell de significança de 0.05, es pot concloure, amb un 95% de nivell de confiança, que com el valor de p és major a 0.05, no es pot rebutjar la hipòtesi nul·la, i per tant, amb un nivell de confiança del 95% es pot afirmar que parlar, o no, anglès a casa no té cap efecte en la quantitat de lectura que els estudiants realitzen.
+
+# 6 Conclusions
+
+Conclusions extretes d'aquesta PAC:
+
+- La prova PISA s'ha realitzat bastant equilibradament pel que fa a la distribució de gènere, tot i que, hi ha una petita proporció més d'homes.
+
+- La majoria d'alumnes enquestats parlen anglès a casa.
+
+- La majoria de les puntuacions de lectura de l'alumnat enquestat se centra al voltant dels 500 punts.
+
+- El gènere és un factor que afecta la puntuació de lectura. De fet, les noies tenen una puntuació superior.
+
+- El fet de parlar anglès a casa o parlar un altre idioma no és un factor que influeixi de manera molt significativa en les puntuacions de lectura.
+
+- Llegir 30 minuts al dia per plaer és un fet que afecta de manera molt positiva en les notes de lectura.
+
+- Aquelles escoles situades en àrees urbanes tendeixen a tenir unes puntuacions de lectura superiors.
+
+- Néixer als EUA influeix de manera positiva en les puntuacions de lectura.
+
+- Les notes de lectura d'entre 525 i 550 punts de lectura i una dedicació d'aproximadament 300 minuts setmanals a l'estudi de l'anglès concentra una gran part 
+dels estudiants enquestats.
+
+- Les notes de lectura al voltant de 500 punts concentren una gran part de l'alumnat enquestat. El nombre d'alumnes d'aquests centres són aquells centres amb aproximadament 1000 estudiants.
+
+- L'interval de confiança de les puntuacions de lectura no es veu alterat en gran manera si el nivell de confiança augmenta del 95% al 97%.
+
+- Les variables proposades en l'estudi de l'exercici 3, sí que afecten les puntuacions de lectura en un 95% de nivell de confiança.
+
+- Parlar anglès a casa i llegir per plaer són variables independents.
 
 
 
